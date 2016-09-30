@@ -42,7 +42,7 @@ function firstRun() {
             hash.hashPassword(password, (err, hash) => {
               if (err) console.log('Error occured');
               else {
-                db.run('INSERT INTO users (username,hash,is_admin, competing) VALUES (?,?,1,0)', username, hash);
+                db.run('INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,1,0)', username, hash);
                 console.log('admin account added:', username);
               }
             });
