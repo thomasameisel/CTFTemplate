@@ -1,5 +1,13 @@
 /*jslint esversion:6 */
 
+function inputToJSON() {
+  let json = {};
+  $('input').each(function() {
+    if (this.value) json[this.id] = this.value;
+  });
+  return json;
+}
+
 function createTableRow(data, username) {
   let td = '<td';
   if (username && username === $('#profile_header').text()) {
@@ -42,7 +50,7 @@ function addChallengesToList(challenges, onclick) {
     tmp += '>' + challenge.challenge_name + ' (' + challenge.points + ' points)</a>';
   });
   $('#challenges').append(tmp);
-  
+
   $('#challenges').on('click', 'a', function() {
     $('#challenges').children('a').each(function() {
       this.style['font-weight'] = 'normal';

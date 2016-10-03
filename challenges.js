@@ -6,15 +6,31 @@ let db = require('./db').db;
 
 let checkLoggedIn = require('./auth.js').checkLoggedIn;
 
+let start_time, end_time;
+
+db.all('SELECT * FROM times', function(err, data) {
+  if (!err && data.length > 0) {
+    data.forEach(function(row) {
+      if (row.type === 'start_time') start_time = row.time;
+      else if (row.type === 'end_time') end_time = row.time;
+    });
+  }
+});
+
 function getChallenges(req, res) {
   checkLoggedIn(req, res, () => {
     // only return the challenges the user has not completed yet
-    db.all('SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
-      req.session.username,
-      function(err, data) {
-        if (err) res.status(401).send({ error: 'Error with database' });
-        else res.status(201).send(data);
-      });
+    let time = Math.floor(Date.now() / 1000);
+    if ((!start_time || time > start_time) && (!end_time || time < end_time)) {
+      db.all('SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
+        req.session.username,
+        function(err, data) {
+          if (err) res.status(401).send({ error: 'Error with database' });
+          else res.status(201).send(data);
+        });
+    } else {
+      res.status(401).send({ error: 'Competition is not currently in session' });
+    }
   });
 }
 
@@ -78,10 +94,24 @@ function getAllCompleted(req, res) {
     });
 }
 
+function setTime(type, time) {
+  switch (type) {
+    case 'start_time': {
+      start_time = time;
+      break;
+    }
+    case 'end_time': {
+      end_time = time;
+      break;
+    }
+  }
+}
+
 module.exports = {
   getChallenges: getChallenges,
   getChallenge: getChallenge,
   submitFlag: submitFlag,
   getCompleted: getCompleted,
-  getAllCompleted: getAllCompleted
+  getAllCompleted: getAllCompleted,
+  setTime: setTime
 };

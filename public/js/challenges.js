@@ -43,7 +43,11 @@ function populateChallenge(challengeId) {
 function populateChallenges() {
   ajaxGet('/v1/challenges',
     addChallengesToChallengesList,
-    () => {});
+    (data) => {
+      let error = document.createElement('p');
+      error.innerHTML = JSON.parse(data.responseText).error;
+      document.getElementById('challenges').appendChild(error);
+    });
 }
 
 function submitFlag() {

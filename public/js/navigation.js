@@ -55,5 +55,8 @@ function goToProfile() {
 
 function goToAdmin() {
   headerBold('admin');
-  loadFile('admin.html', populateAdminChallenges);
+  loadFile('admin.html', () => {
+    populateAdminChallenges();
+    populateTimes();
+  });
 }

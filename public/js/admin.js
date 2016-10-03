@@ -81,3 +81,23 @@ function addChallenge() {
     showAddChallenge();
   });
 }
+
+function populateTimes() {
+  ajaxGet('/v1/admin/get_times',
+    (data) => {
+      $('#start_time').val(data.start_time);
+      $('#end_time').val(data.end_time);
+    },
+    () => {});
+}
+
+function setTimes() {
+  times = {};
+  $('#times input').each(function() {
+    times[this.id] = this.value;
+  });
+
+  ajaxPost('/v1/admin/set_times', times,
+    () => {},
+    () => {});
+}

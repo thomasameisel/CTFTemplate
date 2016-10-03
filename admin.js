@@ -3,8 +3,10 @@
 'use strict';
 
 let fs = require('fs');
+let moment = require('moment');
 
-let checkAdmin = require('./auth.js').checkAdmin;
+let checkAdmin = require('./auth').checkAdmin;
+let setTime = require('./challenges').setTime;
 
 let db = require('./db').db;
 
@@ -85,11 +87,46 @@ function deleteChallenge(req, res) {
   });
 }
 
+function getTimes(req, res) {
+  checkAdmin(req, res, () => {
+    db.all('SELECT * FROM times', (err, data) => {
+      if (err) res.status(400).send({ error: 'Error with database' });
+      else if (data.length === 0) res.status(401).send();
+      else {
+        let times = {};
+        data.forEach((row) => {
+          times[row.type] = moment.unix(row.time).format('YYYY-MM-DDTHH:MM');
+        });
+        res.status(201).send(times);
+      }
+    });
+  });
+}
+
+function setTimes(req, res) {
+  checkAdmin(req, res, () => {
+    let start_time = req.body.start_time;
+    let end_time = req.body.end_time;
+    let times = { 'start_time': start_time, 'end_time': end_time };
+    for (let type in times) {
+      if (times[type] && times[type].length > 0) {
+        let unix = moment(times[type]).unix();
+        db.run('INSERT OR REPLACE INTO times (type, time) VALUES (?,?)',
+          type, unix);
+        setTime(type, unix);
+      }
+    }
+    res.status(201).send();
+  });
+}
+
 module.exports = {
   getAdmin: getAdmin,
   getChallenges: getChallenges,
   getChallenge: getChallenge,
   addChallenge: addChallenge,
   editChallenge: editChallenge,
-  deleteChallenge: deleteChallenge
+  deleteChallenge: deleteChallenge,
+  getTimes: getTimes,
+  setTimes: setTimes
 };
