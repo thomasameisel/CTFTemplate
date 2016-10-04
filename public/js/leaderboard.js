@@ -12,11 +12,10 @@ function addTeamsToList(teams) {
 }
 
 function populateLeaderboard() {
-  ajaxGet('/v1/leaderboard',
-    addTeamsToList,
-    () => {});
-
-  ajaxGet('/v1/all_completed',
-    addChallengesToCompleted,
+  ajaxGet('/v1/leaderboard_all_completed',
+    (data) => {
+      addTeamsToList(data.leaderboard);
+      addChallengesToCompleted(data.all_completed);
+    },
     () => {});
 }

@@ -53,6 +53,8 @@ app.get('/v1/leaderboard', points.getLeaderboard);
 
 app.get('/v1/points', points.getPoints);
 
+app.get('/v1/leaderboard_all_completed', points.getLeaderboardAllCompleted);
+
 app.get('/v1/admin', admin.getAdmin);
 
 app.get('/v1/admin/challenges', admin.getChallenges);

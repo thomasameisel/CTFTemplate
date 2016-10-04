@@ -52,15 +52,19 @@ function submitFlag(req, res) {
     else {
       db.get('SELECT flag FROM challenges WHERE rowid=?', challenge_id,
         function(err, data) {
+          db.run('BEGIN TRANSACTION');
+          let unixTime = Math.floor(new Date() / 1000);
+          db.run('INSERT OR IGNORE INTO attempts (username,challenge_id,time_completed,attempt) ' +
+            'VALUES (?,?,?,?)', req.session.username, challenge_id, unixTime, flag);
+
           if (err) res.status(400).send({ error: 'Error with database' });
           else if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
-          else if (data.flag !== flag) res.status(401).send({ error: 'flag is not correct' });
-          else if (data.flag === flag || '_FLAG_(' + data.flag + ')' === flag) {
-            let unixTime = Math.floor(new Date() / 1000);
+          else if (data.flag === flag || '_FLAG_(' + data.flag + ')' === flag || data.flag === '_FLAG_(' + flag + ')') {
             db.run('INSERT OR IGNORE INTO completed (username,challenge_id,time_completed) ' +
               'VALUES (?,?,?)', req.session.username, challenge_id, unixTime);
             res.status(201).send({ msg: 'Correct answer!' });
-          }
+          } else res.status(401).send({ error: 'flag is not correct' });
+          db.run('END');
         });
     }
   });
