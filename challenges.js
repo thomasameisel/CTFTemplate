@@ -4,7 +4,7 @@
 
 let db = require('./db').db;
 
-let checkLoggedIn = require('./auth.js').checkLoggedIn;
+let checkAuthorized = require('./auth.js').checkAuthorized;
 
 let start_time, end_time;
 
@@ -18,24 +18,19 @@ db.all('SELECT * FROM times', function(err, data) {
 });
 
 function getChallenges(req, res) {
-  checkLoggedIn(req, res, () => {
-    // only return the challenges the user has not completed yet
-    let time = Math.floor(Date.now() / 1000);
-    if ((!start_time || time > start_time) && (!end_time || time < end_time)) {
-      db.all('SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
-        req.session.username,
-        function(err, data) {
-          if (err) res.status(401).send({ error: 'Error with database' });
-          else res.status(201).send(data);
-        });
-    } else {
-      res.status(401).send({ error: 'Competition is not currently in session' });
-    }
+  // only return the challenges the user has not completed yet
+  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
+    db.all('SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
+      req.session.username,
+      function(err, data) {
+        if (err) res.status(401).send({ error: 'Error with database' });
+        else res.status(201).send(data);
+      });
   });
 }
 
 function getChallenge(req, res) {
-  checkLoggedIn(req, res, () => {
+  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
     let challenge_id = req.query.challenge_id;
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
     else {
@@ -49,7 +44,7 @@ function getChallenge(req, res) {
 }
 
 function submitFlag(req, res) {
-  checkLoggedIn(req, res, () => {
+  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
     let challenge_id = req.body.challenge_id;
     let flag = req.body.flag;
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });

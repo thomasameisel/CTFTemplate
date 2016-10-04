@@ -2,6 +2,8 @@
 /*jslint esversion: 6 */
 'use strict';
 
+let moment = require('moment');
+
 let hash = require('./hash');
 
 let db = require('./db').db;
@@ -10,6 +12,26 @@ function checkLoggedIn(req, res, cb) {
   if (!req.session.username) {
     res.status(401).send({ error: 'Must be logged in' });
   } else if (cb) cb();
+}
+
+function checkTimes(req, res, start_time, end_time, now, cb) {
+  let time = Math.floor(now / 1000);
+  if ((!start_time || time >= start_time) && (!end_time || time <= end_time)) {
+    cb();
+  } else if (start_time && time < start_time) {
+    res.status(401).send({ error: 'Competition starts at ' + moment.unix(start_time).format('hh:mm A') });
+  } else if (end_time && time > end_time) {
+    res.status(401).send({ error: 'Competition ended at ' + moment.unix(end_time).format('hh:mm A') });
+  } else {
+    // should not happen
+    res.status(401).send();
+  }
+}
+
+function checkAuthorized(req, res, start_time, end_time, now, cb) {
+  checkLoggedIn(req, res, () => {
+    checkTimes(req, res, start_time, end_time, now, cb);
+  });
 }
 
 function checkAdmin(req, res, cb) {
@@ -105,6 +127,6 @@ module.exports = {
   signup: signup,
   auth: auth,
   logout: logout,
-  checkLoggedIn: checkLoggedIn,
+  checkAuthorized: checkAuthorized,
   checkAdmin: checkAdmin
 };
