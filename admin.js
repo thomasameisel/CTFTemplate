@@ -95,7 +95,7 @@ function getTimes(req, res) {
       else {
         let times = {};
         data.forEach((row) => {
-          times[row.type] = moment.unix(row.time).format('YYYY-MM-DDTHH:MM');
+          times[row.type] = moment.unix(row.time).format('YYYY-MM-DDTHH:mm');
         });
         res.status(201).send(times);
       }

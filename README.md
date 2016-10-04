@@ -28,3 +28,4 @@ The Admin tab is also shown when logged in as the admin:
   - Add and edit challenges
     - Text in the Challenge Content box is rendered as HTML
   - Delete challenges
+  - Set start and end time for the competition
