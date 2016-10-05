@@ -6,7 +6,7 @@ let fs = require('fs');
 let moment = require('moment');
 
 let checkAdmin = require('./auth').checkAdmin;
-let setTime = require('./challenges').setTime;
+let setValue = require('./challenges').setValue;
 
 let db = require('./db').db;
 
@@ -87,17 +87,19 @@ function deleteChallenge(req, res) {
   });
 }
 
-function getTimes(req, res) {
+function getConf(req, res) {
   checkAdmin(req, res, () => {
-    db.all('SELECT * FROM times', (err, data) => {
+    db.all('SELECT * FROM conf', (err, data) => {
       if (err) res.status(400).send({ error: 'Error with database' });
       else if (data.length === 0) res.status(401).send();
       else {
-        let times = {};
+        let conf = {};
         data.forEach((row) => {
-          times[row.type] = moment.unix(row.time).format('YYYY-MM-DDTHH:mm');
+          if (row.type === 'start_time' || row.type === 'end_time') {
+            conf[row.type] = moment.unix(row.value).format('YYYY-MM-DDTHH:mm');
+          } else conf[row.type] = row.value;
         });
-        res.status(201).send(times);
+        res.status(201).send(conf);
       }
     });
   });
@@ -111,12 +113,24 @@ function setTimes(req, res) {
     for (let type in times) {
       if (times[type] && times[type].length > 0) {
         let unix = moment(times[type]).unix();
-        db.run('INSERT OR REPLACE INTO times (type, time) VALUES (?,?)',
+        db.run('INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)',
           type, unix);
-        setTime(type, unix);
+        setValue(type, unix);
       }
     }
     res.status(201).send();
+  });
+}
+
+function setFlagFormat(req, res) {
+  checkAdmin(req, res, () => {
+    let flag_format = req.body.flag_format;
+    if (flag_format.indexOf('%s') === -1) res.status(401).send({ error: 'Must contain %s' });
+    else {
+      db.run('INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)', 'flag_format', flag_format);
+      setValue('flag_format', flag_format);
+      res.status(201).send();
+    }
   });
 }
 
@@ -127,6 +141,7 @@ module.exports = {
   addChallenge: addChallenge,
   editChallenge: editChallenge,
   deleteChallenge: deleteChallenge,
-  getTimes: getTimes,
-  setTimes: setTimes
+  getConf: getConf,
+  setTimes: setTimes,
+  setFlagFormat: setFlagFormat
 };

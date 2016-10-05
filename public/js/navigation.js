@@ -57,6 +57,6 @@ function goToAdmin() {
   headerBold('admin');
   loadFile('admin.html', () => {
     populateAdminChallenges();
-    populateTimes();
+    populateConf();
   });
 }

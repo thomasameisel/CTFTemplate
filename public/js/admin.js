@@ -82,22 +82,32 @@ function addChallenge() {
   });
 }
 
-function populateTimes() {
-  ajaxGet('/v1/admin/get_times',
+function populateConf() {
+  ajaxGet('/v1/admin/get_conf',
     (data) => {
-      $('#start_time').val(data.start_time);
-      $('#end_time').val(data.end_time);
+      for (let type in data) {
+        $('#' + type).val(data[type]);
+      }
     },
     () => {});
 }
 
 function setTimes() {
-  times = {};
+  let times = {};
   $('#times input').each(function() {
-    times[this.id] = this.value;
+    if (this.value) times[this.id] = this.value;
   });
 
   ajaxPost('/v1/admin/set_times', times,
-    () => {},
-    () => {});
+    () => $('#times_msg').text(''),
+    (data) => $('#times_msg').text(JSON.parse(data.reponseText).error));
+}
+
+function setFlagFormat() {
+  let flag_format = $('#flag_format').val();
+
+  ajaxPost('/v1/admin/set_flag_format',
+    { flag_format: flag_format },
+    () => $('#flag_format_msg').text(''),
+    (data) => $('#flag_format_msg').text(JSON.parse(data.responseText).error));
 }

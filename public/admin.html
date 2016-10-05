@@ -10,10 +10,16 @@
     <br />
     <button type="button" class="btn btn-default" onclick="showAddChallenge()">Add challenge</button>
     <div id="times" class="bottom">
+        <label for="flag_format">Flag format</label>
+        <div>
+            <input type="text" id="flag_format" style="display:block" placeholder="Ex. _FLAG_(%s)" onblur="setFlagFormat()" />
+            <p id="flag_format_msg"></p>
+        </div>
         <label for="start_time">Start time</label>
         <input type="datetime-local" id="start_time" style="display:block" onblur="setTimes()" />
         <label for="start_time">End time</label>
         <input type="datetime-local" id="end_time" style="display:block" onblur="setTimes()" />
+        <p id="times_msg"></p>
     </div>
 </div>
 <div class="col-md-5">

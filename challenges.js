@@ -6,16 +6,32 @@ let db = require('./db').db;
 
 let checkAuthorized = require('./auth.js').checkAuthorized;
 
-let start_time, end_time;
+let start_time, end_time, flag_format;
 
-db.all('SELECT * FROM times', function(err, data) {
+db.all('SELECT * FROM conf', function(err, data) {
   if (!err && data.length > 0) {
     data.forEach(function(row) {
-      if (row.type === 'start_time') start_time = row.time;
-      else if (row.type === 'end_time') end_time = row.time;
+      switch (row.type) {
+        case 'start_time': {
+          start_time = row.value;
+          break;
+        }
+        case 'end_time': {
+          end_time = row.value;
+          break;
+        }
+        case 'flag_format': {
+          flag_format = row.value;
+          break;
+        }
+      }
     });
   }
 });
+
+function formatStr(str, insertStr) {
+  return str.replace('%s', insertStr);
+}
 
 function getChallenges(req, res) {
   // only return the challenges the user has not completed yet
@@ -59,7 +75,8 @@ function submitFlag(req, res) {
 
           if (err) res.status(400).send({ error: 'Error with database' });
           else if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
-          else if (data.flag === flag || '_FLAG_(' + data.flag + ')' === flag || data.flag === '_FLAG_(' + flag + ')') {
+          // check if the given flag or flag in database is formatted
+          else if (data.flag === flag || (flag_format && (formatStr(flag_format, data.flag) === flag || formatStr(flag_format, flag) === data.flag))) {
             db.run('INSERT OR IGNORE INTO completed (username,challenge_id,time_completed) ' +
               'VALUES (?,?,?)', req.session.username, challenge_id, unixTime);
             res.status(201).send({ msg: 'Correct answer!' });
@@ -93,14 +110,18 @@ function getAllCompleted(req, res) {
     });
 }
 
-function setTime(type, time) {
+function setValue(type, value) {
   switch (type) {
     case 'start_time': {
-      start_time = time;
+      start_time = value;
       break;
     }
     case 'end_time': {
-      end_time = time;
+      end_time = value;
+      break;
+    }
+    case 'flag_format': {
+      flag_format = value;
       break;
     }
   }
@@ -112,5 +133,5 @@ module.exports = {
   submitFlag: submitFlag,
   getCompleted: getCompleted,
   getAllCompleted: getAllCompleted,
-  setTime: setTime
+  setValue: setValue
 };

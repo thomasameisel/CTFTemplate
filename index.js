@@ -67,9 +67,11 @@ app.post('/v1/admin/edit_challenge', admin.editChallenge);
 
 app.post('/v1/admin/delete_challenge', admin.deleteChallenge);
 
-app.get('/v1/admin/get_times', admin.getTimes);
+app.get('/v1/admin/get_conf', admin.getConf);
 
 app.post('/v1/admin/set_times', admin.setTimes);
+
+app.post('/v1/admin/set_flag_format', admin.setFlagFormat);
 
 let server = app.listen(8080, function() {
   console.log('CTF server listening on ' + server.address().port);
