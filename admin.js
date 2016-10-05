@@ -134,6 +134,15 @@ function setFlagFormat(req, res) {
   });
 }
 
+function getAllAttempts(req, res) {
+  checkAdmin(req, res, () => {
+    db.all('SELECT * FROM attempts ORDER BY attempt_time DESC', function(err, rows) {
+      if (err) res.status(401).send({ error: 'Error with database' });
+      else res.status(201).send(rows);
+    });
+  });
+}
+
 module.exports = {
   getAdmin: getAdmin,
   getChallenges: getChallenges,
@@ -143,5 +152,6 @@ module.exports = {
   deleteChallenge: deleteChallenge,
   getConf: getConf,
   setTimes: setTimes,
-  setFlagFormat: setFlagFormat
+  setFlagFormat: setFlagFormat,
+  getAllAttempts: getAllAttempts
 };

@@ -1,5 +1,19 @@
 /*jslint esversion:6 */
 
+function populateAllAttemptsTable(attempts) {
+  let tmp = '';
+  attempts.forEach(function(attempt) {
+    tmp += '<tr>';
+    tmp += createTableRow(attempt.username);
+    tmp += createTableRow(attempt.challenge_id);
+    tmp += createTableRow(unixTimeToRegular(attempt.attempt_time));
+    tmp += createTableRow(attempt.attempt);
+    tmp += createTableRow(attempt.correct);
+    tmp += '</tr>';
+  });
+  $('#attempts').append(tmp);
+}
+
 function changeAdminResponse(msg) {
   $('#admin_response').text(msg);
 }
@@ -93,10 +107,10 @@ function populateConf() {
 }
 
 function setTimes() {
-  let times = {};
-  $('#times input').each(function() {
-    if (this.value) times[this.id] = this.value;
-  });
+  let times = {
+    start_time: $('#start_time').val(),
+    end_time: $('#end_time').val()
+  };
 
   ajaxPost('/v1/admin/set_times', times,
     () => $('#times_msg').text(''),
@@ -110,4 +124,10 @@ function setFlagFormat() {
     { flag_format: flag_format },
     () => $('#flag_format_msg').text(''),
     (data) => $('#flag_format_msg').text(JSON.parse(data.responseText).error));
+}
+
+function populateAllAttempts() {
+  ajaxGet('/v1/admin/all_attempts',
+    populateAllAttemptsTable,
+    () => {});
 }

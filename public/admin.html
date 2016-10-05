@@ -3,24 +3,24 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 <h1 class="center">Admin</h1>
-<div class="col-md-offset-1 col-md-4">
+<div class="col-md-3" id="conf">
+    <label for="flag_format">Flag format</label>
+    <div>
+        <input type="text" id="flag_format" style="display:block" placeholder="Ex. _FLAG_(%s)" onblur="setFlagFormat()" />
+        <p id="flag_format_msg"></p>
+    </div>
+    <label for="start_time">Start time</label>
+    <input type="datetime-local" id="start_time" style="display:block" onblur="setTimes()" />
+    <label for="start_time">End time</label>
+    <input type="datetime-local" id="end_time" style="display:block" onblur="setTimes()" />
+    <p id="times_msg"></p>
+</div>
+<div class="col-md-4">
     <h3>Challenges</h3>
     <div id="challenges">
     </div>
     <br />
     <button type="button" class="btn btn-default" onclick="showAddChallenge()">Add challenge</button>
-    <div id="times" class="bottom">
-        <label for="flag_format">Flag format</label>
-        <div>
-            <input type="text" id="flag_format" style="display:block" placeholder="Ex. _FLAG_(%s)" onblur="setFlagFormat()" />
-            <p id="flag_format_msg"></p>
-        </div>
-        <label for="start_time">Start time</label>
-        <input type="datetime-local" id="start_time" style="display:block" onblur="setTimes()" />
-        <label for="start_time">End time</label>
-        <input type="datetime-local" id="end_time" style="display:block" onblur="setTimes()" />
-        <p id="times_msg"></p>
-    </div>
 </div>
 <div class="col-md-5">
     <h3 id="add_edit_challenge">Add Challenge</h3>

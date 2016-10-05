@@ -2,7 +2,7 @@
 
 function setHeaderButtonsVisibility(loggedIn) {
   let loggedInBtns = [
-    'challenges_header', 'logout_header', 'profile_header', 'points_header', 'admin_header'
+    'challenges_header', 'logout_header', 'profile_header', 'points_header', 'admin_header', 'all_attempts_header'
   ];
   let loggedOutBtns = [
     'login_header', 'signup_header'
@@ -24,8 +24,13 @@ function updateUsernamePoints(data) {
 function populateHeaderLoggedIn(data, redirectToChallenges) {
   setHeaderButtonsVisibility(true);
   updateUsernamePoints(data);
-  if (!data.is_admin) $('#admin_header').hide();
-  else $('#admin_header').show();
+  if (!data.is_admin) {
+    $('#admin_header').hide();
+    $('#all_attempts_header').hide();
+  } else {
+    $('#admin_header').show();
+    $('#all_attempts_header').show();
+  }
   if (redirectToChallenges) goToChallenges();
 }
 

@@ -73,6 +73,8 @@ app.post('/v1/admin/set_times', admin.setTimes);
 
 app.post('/v1/admin/set_flag_format', admin.setFlagFormat);
 
+app.get('/v1/admin/all_attempts', admin.getAllAttempts);
+
 let server = app.listen(8080, function() {
   console.log('CTF server listening on ' + server.address().port);
 });

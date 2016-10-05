@@ -60,3 +60,8 @@ function goToAdmin() {
     populateConf();
   });
 }
+
+function goToAllAttempts() {
+  headerBold('all_attempts');
+  loadFile('all_attempts.html', populateAllAttempts);
+}

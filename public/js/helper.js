@@ -33,7 +33,7 @@ function addChallengesToCompleted(challenges) {
       if (challenge.username) tmp += createTableRow(challenge.username, challenge.username);
       tmp += createTableRow(challenge.challenge_name, challenge.username);
       tmp += createTableRow(challenge.points, challenge.username);
-      tmp += createTableRow(unixTimeToRegular(challenge.time_completed), challenge.username);
+      tmp += createTableRow(unixTimeToRegular(challenge.attempt_time), challenge.username);
       tmp += '</tr>';
     });
     $('#challenges_completed').append(tmp);

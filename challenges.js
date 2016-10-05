@@ -66,22 +66,33 @@ function submitFlag(req, res) {
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
     else if (!flag) res.status(400).send({ error: 'Must provide flag' });
     else {
-      db.get('SELECT flag FROM challenges WHERE rowid=?', challenge_id,
+      db.get('SELECT * FROM attempts WHERE correct=1 AND username=? AND challenge_id=?',
+        req.session.username, challenge_id,
         function(err, data) {
-          db.run('BEGIN TRANSACTION');
           let unixTime = Math.floor(new Date() / 1000);
-          db.run('INSERT OR IGNORE INTO attempts (username,challenge_id,time_completed,attempt) ' +
-            'VALUES (?,?,?,?)', req.session.username, challenge_id, unixTime, flag);
+          let correct = false;
 
-          if (err) res.status(400).send({ error: 'Error with database' });
-          else if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
-          // check if the given flag or flag in database is formatted
-          else if (data.flag === flag || (flag_format && (formatStr(flag_format, data.flag) === flag || formatStr(flag_format, flag) === data.flag))) {
-            db.run('INSERT OR IGNORE INTO completed (username,challenge_id,time_completed) ' +
-              'VALUES (?,?,?)', req.session.username, challenge_id, unixTime);
-            res.status(201).send({ msg: 'Correct answer!' });
-          } else res.status(401).send({ error: 'flag is not correct' });
-          db.run('END');
+          if (err) res.status(401).send({ error: 'Error with database' });
+          else if (data) {
+            res.status(401).send({ error: 'Already completed this challenge' });
+            db.run('INSERT INTO attempts (username,challenge_id,attempt_time,attempt) ' +
+              'VALUES (?,?,?,?)', req.session.username, challenge_id, unixTime, flag);
+          }
+          else {
+            db.get('SELECT flag FROM challenges WHERE rowid=?', challenge_id,
+              function(err, data) {
+                if (err) res.status(400).send({ error: 'Error with database' });
+                else if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
+                // check if the given flag or flag in database is formatted
+                else if (data.flag === flag || (flag_format && (formatStr(flag_format, data.flag) === flag || formatStr(flag_format, flag) === data.flag))) {
+                  correct = true;
+                  res.status(201).send({ msg: 'Correct answer!' });
+                } else res.status(401).send({ error: 'flag is not correct' });
+
+                db.run('INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
+                  'VALUES (?,?,?,?,?)', req.session.username, challenge_id, unixTime, flag, correct);
+              });
+          }
         });
     }
   });
@@ -91,7 +102,7 @@ function getCompleted(req, res) {
   let username = req.query.username;
   if (!username) res.status(400).send({ error: 'Must provide username' });
   else {
-    db.all('SELECT challenge_name, points, time_completed FROM completed, challenges WHERE completed.challenge_id = challenges.rowid AND username=? ORDER BY time_completed DESC', username,
+    db.all('SELECT challenge_name, points, attempt_time FROM completed WHERE username=? ORDER BY attempt_time DESC', username,
       function(err, rows) {
         if (err) res.status(401).send({ error: 'Error with database' });
         else res.status(201).send({
@@ -103,7 +114,7 @@ function getCompleted(req, res) {
 }
 
 function getAllCompleted(req, res) {
-  db.all('SELECT users.username AS username, challenge_name, points, time_completed FROM users NATURAL JOIN (completed JOIN challenges ON completed.challenge_id=challenges.ROWID) WHERE users.competing=1 ORDER BY time_completed DESC',
+  db.all('SELECT username, challenge_name, points, attempt_time FROM completed ORDER BY attempt_time DESC',
     function(err, rows) {
       if (err) res.status(401).send({ error: 'Error with database' });
       else res.status(201).send(rows);
