@@ -5,7 +5,7 @@ function populateAllAttemptsTable(attempts) {
   attempts.forEach(function(attempt) {
     tmp += '<tr>';
     tmp += createTableRow(attempt.username);
-    tmp += createTableRow(attempt.challenge_id);
+    tmp += createTableRow(attempt.challenge_name);
     tmp += createTableRow(unixTimeToRegular(attempt.attempt_time));
     tmp += createTableRow(attempt.attempt);
     tmp += createTableRow(attempt.correct);

@@ -136,7 +136,7 @@ function setFlagFormat(req, res) {
 
 function getAllAttempts(req, res) {
   checkAdmin(req, res, () => {
-    db.all('SELECT * FROM attempts ORDER BY attempt_time DESC', function(err, rows) {
+    db.all('SELECT username, challenge_name, attempt_time, attempt, correct FROM attempts JOIN challenges ON attempts.challenge_id=challenges.ROWID ORDER BY attempt_time DESC', function(err, rows) {
       if (err) res.status(401).send({ error: 'Error with database' });
       else res.status(201).send(rows);
     });

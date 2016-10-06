@@ -30,7 +30,7 @@ function getLeaderboardAllCompleted(req, res) {
   db.all('SELECT username, total_points AS points FROM total_points WHERE competing=1 ORDER BY total_points DESC', function(err, leaderboard) {
     if (err) res.status(401).send({ error: 'Error with database' });
     else {
-      db.all('SELECT username, challenge_name, points, attempt_time FROM completed',
+      db.all('SELECT username, challenge_name, points, attempt_time FROM completed ORDER BY attempt_time DESC',
         function(err, all_completed) {
           if (err) res.status(401).send({ error: 'Error with database' });
           else res.status(201).send({
