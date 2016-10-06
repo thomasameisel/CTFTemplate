@@ -2,13 +2,13 @@
 /*jslint esversion: 6 */
 'use strict';
 
-let db = require('./db').db;
+let db = require('./db');
 
 let checkAuthorized = require('./auth.js').checkAuthorized;
 
 let start_time, end_time, flag_format;
 
-db.all('SELECT * FROM conf', function(err, data) {
+db.db.all('SELECT * FROM conf', function(err, data) {
   if (!err && data.length > 0) {
     data.forEach(function(row) {
       switch (row.type) {
@@ -36,11 +36,10 @@ function formatStr(str, insertStr) {
 function getChallenges(req, res) {
   // only return the challenges the user has not completed yet
   checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
-    db.all('SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
-      req.session.username,
-      function(err, data) {
-        if (err) res.status(401).send({ error: 'Error with database' });
-        else res.status(201).send(data);
+    db.dbAll(req, res, 'SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
+      [req.session.username],
+      function(data) {
+        res.status(201).send(data);
       });
   });
 }
@@ -50,10 +49,9 @@ function getChallenge(req, res) {
     let challenge_id = req.query.challenge_id;
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
     else {
-      db.get('SELECT rowid AS challenge_id, challenge_content FROM challenges WHERE rowid=?', challenge_id,
-        function(err, data) {
-          if (err) res.status(401).send({ error: 'Error with database' });
-          else res.status(201).send(data);
+      db.dbGet(req, res, 'SELECT rowid AS challenge_id, challenge_content FROM challenges WHERE rowid=?', [challenge_id],
+        function(data) {
+          res.status(201).send(data);
         });
     }
   });
@@ -66,32 +64,30 @@ function submitFlag(req, res) {
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
     else if (!flag) res.status(400).send({ error: 'Must provide flag' });
     else {
-      db.get('SELECT * FROM attempts WHERE correct=1 AND username=? AND challenge_id=?',
-        req.session.username, challenge_id,
-        function(err, data) {
+      db.dbGet(req, res, 'SELECT * FROM attempts WHERE correct=1 AND username=? AND challenge_id=?',
+        [req.session.username, challenge_id],
+        function(data) {
           let unixTime = Math.floor(new Date() / 1000);
-          let correct = false;
 
-          if (err) res.status(401).send({ error: 'Error with database' });
-          else if (data) {
-            res.status(401).send({ error: 'Already completed this challenge' });
-            db.run('INSERT INTO attempts (username,challenge_id,attempt_time,attempt) ' +
-              'VALUES (?,?,?,?)', req.session.username, challenge_id, unixTime, flag);
-          }
-          else {
-            db.get('SELECT flag FROM challenges WHERE rowid=?', challenge_id,
-              function(err, data) {
-                if (err) res.status(400).send({ error: 'Error with database' });
-                else if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
-                // check if the given flag or flag in database is formatted
-                else if (data.flag === flag || (flag_format && (formatStr(flag_format, data.flag) === flag || formatStr(flag_format, flag) === data.flag))) {
-                  correct = true;
-                  res.status(201).send({ msg: 'Correct answer!' });
-                } else res.status(401).send({ error: 'flag is not correct' });
-
-                db.run('INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
-                  'VALUES (?,?,?,?,?)', req.session.username, challenge_id, unixTime, flag, correct);
+          if (data) {
+            db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt) ' +
+              'VALUES (?,?,?,?)', [req.session.username, challenge_id, unixTime, flag], function() {
+                res.status(401).send({ error: 'Already completed this challenge' });
               });
+          } else {
+            db.dbGet(req, res, 'SELECT flag FROM challenges WHERE rowid=?', [challenge_id], function(data) {
+              let correct = data && data.flag &&
+                (data.flag === flag ||
+                (flag_format && (formatStr(flag_format, data.flag) === flag ||
+                formatStr(flag_format, flag) === data.flag)));
+              db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
+                'VALUES (?,?,?,?,?)', [req.session.username, challenge_id, unixTime, flag, correct], function() {
+                  if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
+                  // check if the given flag or flag in database is formatted
+                  else if (correct) res.status(201).send({ msg: 'Correct answer!' });
+                  else res.status(401).send({ error: 'flag is not correct' });
+              });
+            });
           }
         });
     }
@@ -102,10 +98,9 @@ function getCompleted(req, res) {
   let username = req.query.username;
   if (!username) res.status(400).send({ error: 'Must provide username' });
   else {
-    db.all('SELECT challenge_name, points, attempt_time FROM completed WHERE username=? ORDER BY attempt_time DESC', username,
-      function(err, rows) {
-        if (err) res.status(401).send({ error: 'Error with database' });
-        else res.status(201).send({
+    db.dbAll(req, res, 'SELECT challenge_name, points, attempt_time FROM completed WHERE username=? ORDER BY attempt_time DESC', [username],
+      function(rows) {
+        res.status(201).send({
           username: username,
           completed: rows
         });
@@ -114,10 +109,9 @@ function getCompleted(req, res) {
 }
 
 function getAllCompleted(req, res) {
-  db.all('SELECT username, challenge_name, points, attempt_time FROM completed ORDER BY attempt_time DESC',
-    function(err, rows) {
-      if (err) res.status(401).send({ error: 'Error with database' });
-      else res.status(201).send(rows);
+  db.dbAll(req, res, 'SELECT username, challenge_name, points, attempt_time FROM completed ORDER BY attempt_time DESC', [],
+    function(rows) {
+      res.status(201).send(rows);
     });
 }
 

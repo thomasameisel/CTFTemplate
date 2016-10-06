@@ -6,7 +6,7 @@ let moment = require('moment');
 
 let hash = require('./hash');
 
-let db = require('./db').db;
+let db = require('./db');
 
 function checkLoggedIn(req, res, cb) {
   if (!req.session.username) {
@@ -46,10 +46,10 @@ function login(req, res) {
   if (!username || !password) {
     res.status(400).send({ error: 'Must provide username and password' });
   } else {
-    db.get('SELECT users.username, users.hash, users.is_admin, total_points FROM users LEFT OUTER JOIN total_points ON users.username = total_points.username WHERE users.username=?', username,
-      function(err, data) {
-        if (err) res.status(400).send({ error: 'Error with database' });
-        else if (!data) res.status(401).send({ error: 'Username and password are not correct' });
+    db.dbGet(req, res, 'SELECT users.username, users.hash, users.is_admin, total_points FROM users LEFT OUTER JOIN total_points ON users.username = total_points.username WHERE users.username=?',
+      [username],
+      function(data) {
+        if (!data) res.status(401).send({ error: 'Username and password are not correct' });
         else {
           hash.checkPassword(password, data.hash, (err, correct) => {
             if (err) res.status(400).send({ error: 'Error occurred' });
@@ -76,21 +76,23 @@ function signup(req, res) {
   if (!username || !password) {
     res.status(400).send({ error: 'Must provide username and password' });
   } else {
-    db.get('SELECT username FROM users WHERE username=?', username, (err, data) => {
-      if (err) res.status(401).send({ error: 'Error occurred' });
-      else if (data) res.status(401).send({ error: 'Username already exists' });
+    db.dbGet(req, res, 'SELECT username FROM users WHERE username=?', [username], (data) => {
+      if (data) res.status(401).send({ error: 'Username already exists' });
       else {
         hash.hashPassword(password, (err, hash) => {
           if (err) res.status(401).send({ error: 'Error occurred' });
           else {
-            db.run('INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,0,?)', username, hash, !non_competing);
-            req.session.username = username;
-            req.session.admin = false;
-            res.status(201).send({
-              username: username,
-              is_admin: false,
-              points: 0
-            });
+            db.dbRun(req, res, 'INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,0,?)',
+              [username, hash, !non_competing],
+              function() {
+                req.session.username = username;
+                req.session.admin = false;
+                res.status(201).send({
+                  username: username,
+                  is_admin: false,
+                  points: 0
+                });
+              });
           }
         });
       }
@@ -100,14 +102,9 @@ function signup(req, res) {
 
 function auth(req, res) {
   checkLoggedIn(req, res, () => {
-    db.get('SELECT total_points FROM total_points WHERE username=?', req.session.username,
-      function(err, data) {
-        if (err) res.status(201).send({ username: req.session.username });
-        else if (!data) res.status(201).send({
-          username: req.session.username,
-          is_admin: req.session.admin
-        });
-        else res.status(201).send({
+    db.dbGet(req, res, 'SELECT total_points FROM total_points WHERE username=?', [req.session.username],
+      function(data) {
+        res.status(201).send({
           username: req.session.username,
           is_admin: req.session.admin,
           points: data.total_points
