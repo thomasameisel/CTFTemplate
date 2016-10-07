@@ -3,6 +3,8 @@
 Uses Node.js and SQLite
 
 ### First Run
+Run "sudo ubuntu_setup.sh" to set up the environment in Ubuntu in order to run this project.
+
 Run "npm install" then "npm start" in the repo's root directory. The server runs on the 8080 port. It will create two db files - one for sessions (sessions.db) and one for the CTF competition (ctf.db).
 
 
