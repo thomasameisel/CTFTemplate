@@ -131,7 +131,7 @@ function setFlagFormat(req, res) {
     let flag_format = req.body.flag_format;
     if (flag_format.indexOf('%s') === -1) res.status(401).send({ error: 'Must contain %s' });
     else {
-      db.dbRun(req, res, 'INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)', 'flag_format', [flag_format], function() {
+      db.dbRun(req, res, 'INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)', ['flag_format', flag_format], function() {
         setValue('flag_format', flag_format);
         res.status(201).send();
       });

@@ -5,12 +5,18 @@
 var bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-function hashPassword(password, cb) {
-  bcrypt.hash(password, saltRounds, cb);
+function hashPassword(req, res, password, cb) {
+  bcrypt.hash(password, saltRounds, (err, data) => {
+    if (err) res.status(400).send({ error: 'Error occurred' });
+    else if (cb) cb(data);
+  });
 }
 
-function checkPassword(password, hash, cb) {
-  bcrypt.compare(password, hash, cb);
+function checkPassword(req, res, password, hash, cb) {
+  bcrypt.compare(password, hash, (err, data) => {
+    if (err) res.status(400).send({ error: 'Error occurred' });
+    else if (cb) cb(data);
+  });
 }
 
 module.exports = {

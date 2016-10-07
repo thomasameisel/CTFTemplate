@@ -11,7 +11,7 @@ function dbGet(req, res, query, params, cb) {
     if (err) {
       console.log(err);
       res.status(400).send({ error: 'Error occurred' });
-    } else cb(data);
+    } else if (cb) cb(data);
   });
 }
 
@@ -20,7 +20,7 @@ function dbAll(req, res, query, params, cb) {
     if (err) {
       console.log(err);
       res.status(400).send({ error: 'Error occured' });
-    } else cb(rows);
+    } else if (cb) cb(rows);
   });
 }
 
@@ -29,7 +29,7 @@ function dbRun(req, res, query, params, cb) {
     if (err) {
       console.log(err);
       res.status(400).send({ error: 'Error occured' });
-    } else cb();
+    } else if (cb) cb();
   });
 }
 

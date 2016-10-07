@@ -51,9 +51,8 @@ function login(req, res) {
       function(data) {
         if (!data) res.status(401).send({ error: 'Username and password are not correct' });
         else {
-          hash.checkPassword(password, data.hash, (err, correct) => {
-            if (err) res.status(400).send({ error: 'Error occurred' });
-            else if (!correct) res.status(401).send({ error: 'Username and password are not correct' });
+          hash.checkPassword(req, res, password, data.hash, (correct) => {
+            if (!correct) res.status(401).send({ error: 'Username and password are not correct' });
             else {
               req.session.username = username;
               req.session.admin = data.is_admin === 1;
@@ -79,21 +78,18 @@ function signup(req, res) {
     db.dbGet(req, res, 'SELECT username FROM users WHERE username=?', [username], (data) => {
       if (data) res.status(401).send({ error: 'Username already exists' });
       else {
-        hash.hashPassword(password, (err, hash) => {
-          if (err) res.status(401).send({ error: 'Error occurred' });
-          else {
-            db.dbRun(req, res, 'INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,0,?)',
-              [username, hash, !non_competing],
-              function() {
-                req.session.username = username;
-                req.session.admin = false;
-                res.status(201).send({
-                  username: username,
-                  is_admin: false,
-                  points: 0
-                });
+        hash.hashPassword(req, res, password, (hash) => {
+          db.dbRun(req, res, 'INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,0,?)',
+            [username, hash, !non_competing],
+            function() {
+              req.session.username = username;
+              req.session.admin = false;
+              res.status(201).send({
+                username: username,
+                is_admin: false,
+                points: 0
               });
-          }
+            });
         });
       }
     });
