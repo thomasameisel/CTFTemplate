@@ -36,7 +36,7 @@ function formatStr(str, insertStr) {
 function getChallenges(req, res) {
   // only return the challenges the user has not completed yet
   checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
-    db.dbAll(req, res, 'SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
+    db.dbAll(req, res, 'SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY challenge_name ASC',
       [req.session.username],
       function(data) {
         res.status(201).send(data);

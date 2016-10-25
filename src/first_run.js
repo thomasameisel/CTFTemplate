@@ -45,7 +45,7 @@ function firstRun() {
               prompt.get(['Username', {name: 'Password', hidden:true}], (err, result) => {
                 let username = result.Username;
                 let password = result.Password;
-                hash.hashPassword(password, (err, hash) => {
+                hash.hash(password, (err, hash) => {
                   if (err) console.log('Error occured');
                   else {
                     db.run('INSERT INTO users (username,hash,is_admin,competing) VALUES (?,?,1,0)', username, hash);
