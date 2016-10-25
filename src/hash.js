@@ -3,7 +3,7 @@
 'use strict';
 
 var bcrypt = require('bcrypt');
-const saltRounds = 10;
+const saltRounds = 12;
 
 function hashPassword(req, res, password, cb) {
   bcrypt.hash(password, saltRounds, (err, data) => {

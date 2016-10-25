@@ -29,16 +29,38 @@ function logout() {
 function submitLogin() {
   let info = inputToJSON('login');
 
+  $('#login_btn').prop('disabled', true);
+  document.body.style.cursor='wait';
+
   ajaxPost('/v1/login', info,
-    afterAuth,
-    changeError);
+    (data) => {
+      $('#login_btn').prop('disabled', false);
+      document.body.style.cursor='default';
+      afterAuth(data);
+    },
+    (data) => {
+      $('#login_btn').prop('disabled', false);
+      document.body.style.cursor='default';
+      changeError(data);
+    });
 }
 
 function submitSignup() {
   let info = inputToJSON('signup');
   info.non_competing = $('#non_competing').is(':checked');
 
+  $('#signup_btn').prop('disabled', true);
+  document.body.style.cursor='wait';
+
   ajaxPost('/v1/signup', info,
-    afterAuth,
-    changeError);
+    (data) => {
+      $('#signup_btn').prop('disabled', false);
+      document.body.style.cursor='default';
+      afterAuth(data);
+    },
+    (data) => {
+      $('#signup_btn').prop('disabled', false);
+      document.body.style.cursor='default';
+      changeError(data);
+    });
 }

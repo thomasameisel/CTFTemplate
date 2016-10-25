@@ -54,12 +54,23 @@ function submitFlag() {
   let inputs = inputToJSON();
   if (!inputs.flag || inputs.flag.length === 0) changeResponse('Must provide flag');
   else {
+    $('#submit_btn').prop('disabled', true);
+    document.body.style.cursor='wait';
+
     ajaxPost('/v1/flag', inputs,
       (data) => {
+        $('#submit_btn').prop('disabled', false);
+        document.body.style.cursor='default';
+
         changeResponse(data.msg);
         populateChallenges();
         updatePoints();
       },
-      (data) => changeResponse(JSON.parse(data.responseText).error));
+      (data) => {
+        $('#submit_btn').prop('disabled', false);
+        document.body.style.cursor='default';
+        
+        changeResponse(JSON.parse(data.responseText).error);
+      });
   }
 }
