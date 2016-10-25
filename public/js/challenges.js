@@ -35,9 +35,18 @@ function addChallengesToChallengesList(challenges) {
 }
 
 function populateChallenge(challengeId) {
+  $('#loading').css('display', 'block');
+  $('#challenge_content').hide();
   ajaxGet('/v1/challenge?challenge_id=' + challengeId,
-    addChallengeToContent,
-    () => {});
+    (data) => {
+      $('#loading').css('display', 'none');
+      $('#challenge_content').show();
+      addChallengeToContent(data);
+    },
+    () => {
+      $('#loading').css('display', 'none');
+      $('#challenge_content').show();
+    });
 }
 
 function populateChallenges() {
@@ -69,7 +78,7 @@ function submitFlag() {
       (data) => {
         $('#submit_btn').prop('disabled', false);
         document.body.style.cursor='default';
-        
+
         changeResponse(JSON.parse(data.responseText).error);
       });
   }
