@@ -46,7 +46,7 @@ function addChallenge(req, res) {
   checkAdmin(req, res, () => {
     let challenge_name = req.body.challenge_name;
     let points = req.body.points;
-    let flag = req.body.flag;
+    let flag = req.body.flag.toLowerCase();
     let challenge_content = req.body.challenge_content;
     if (!challenge_name || !points || !flag || !challenge_content) {
       res.status(401).send({ error: 'Must provide all information' });
@@ -128,7 +128,7 @@ function setTimes(req, res) {
 
 function setFlagFormat(req, res) {
   checkAdmin(req, res, () => {
-    let flag_format = req.body.flag_format;
+    let flag_format = req.body.flag_format.toLowerCase();
     if (flag_format.indexOf('%s') === -1) res.status(401).send({ error: 'Must contain %s' });
     else {
       db.dbRun(req, res, 'INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)', ['flag_format', flag_format], function() {

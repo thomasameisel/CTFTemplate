@@ -54,7 +54,7 @@ function login(req, res) {
           hash.checkPassword(req, res, password, data.hash, (correct) => {
             if (!correct) res.status(401).send({ error: 'Username and password are not correct' });
             else {
-              req.session.username = username;
+              req.session.username = data.username;
               req.session.admin = data.is_admin === 1;
               res.status(201).send({
                 username: username,

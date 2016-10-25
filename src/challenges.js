@@ -10,24 +10,26 @@ let start_time, end_time, flag_format;
 
 db.db.all('SELECT * FROM conf', function(err, data) {
   if (!err && data.length > 0) {
-    data.forEach(function(row) {
-      switch (row.type) {
-        case 'start_time': {
-          start_time = row.value;
-          break;
-        }
-        case 'end_time': {
-          end_time = row.value;
-          break;
-        }
-        case 'flag_format': {
-          flag_format = row.value;
-          break;
-        }
-      }
-    });
+    data.forEach((row) => setValue(row.type, row.value));
   }
 });
+
+function setValue(type, value) {
+  switch (type) {
+    case 'start_time': {
+      start_time = value;
+      break;
+    }
+    case 'end_time': {
+      end_time = value;
+      break;
+    }
+    case 'flag_format': {
+      flag_format = value.toLowerCase();
+      break;
+    }
+  }
+}
 
 function formatStr(str, insertStr) {
   return str.replace('%s', insertStr);
@@ -76,13 +78,16 @@ function submitFlag(req, res) {
               });
           } else {
             db.dbGet(req, res, 'SELECT flag FROM challenges WHERE rowid=?', [challenge_id], function(data) {
-              let correct = data && data.flag &&
-                (data.flag === flag ||
-                (flag_format && (formatStr(flag_format, data.flag) === flag ||
-                formatStr(flag_format, flag) === data.flag)));
+              let lowerFlag = flag.toLowerCase();
+              let actualFlag = data.flag.toLowerCase();
+              let correct = data && actualFlag &&
+                (actualFlag === lowerFlag ||
+                  (flag_format !== undefined &&
+                    (formatStr(flag_format, actualFlag) === lowerFlag ||
+                    formatStr(flag_format, lowerFlag) === actualFlag)));
               db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
                 'VALUES (?,?,?,?,?)', [req.session.username, challenge_id, unixTime, flag, correct], function() {
-                  if (!data || !data.flag) res.status(401).send({ error: 'challenge_id is not valid' });
+                  if (!data || !actualFlag) res.status(401).send({ error: 'challenge_id is not valid' });
                   // check if the given flag or flag in database is formatted
                   else if (correct) res.status(201).send({ msg: 'Correct answer!' });
                   else res.status(401).send({ error: 'flag is not correct' });
@@ -113,23 +118,6 @@ function getAllCompleted(req, res) {
     function(rows) {
       res.status(201).send(rows);
     });
-}
-
-function setValue(type, value) {
-  switch (type) {
-    case 'start_time': {
-      start_time = value;
-      break;
-    }
-    case 'end_time': {
-      end_time = value;
-      break;
-    }
-    case 'flag_format': {
-      flag_format = value;
-      break;
-    }
-  }
 }
 
 module.exports = {

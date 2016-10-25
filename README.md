@@ -29,6 +29,7 @@ The Admin and All Attempts tabs are also shown when logged in as the admin:
 - Admin
   - Add and edit challenges
     - Text in the Challenge Content box is rendered as HTML
+    - Flags are converted to lower case in order to make flag verification more accurate
   - Delete challenges
   - Set start and end time for the competition
 
