@@ -46,11 +46,12 @@ function addChallenge(req, res) {
   checkAdmin(req, res, () => {
     let challenge_name = req.body.challenge_name;
     let points = req.body.points;
-    let flag = req.body.flag.toLowerCase();
+    let flag = req.body.flag;
     let challenge_content = req.body.challenge_content;
     if (!challenge_name || !points || !flag || !challenge_content) {
       res.status(401).send({ error: 'Must provide all information' });
     } else {
+      flag = flag.toLowerCase();
       db.dbRun(req, res, 'INSERT INTO challenges (challenge_name,points,flag,challenge_content)' +
         ' VALUES (?,?,?,?)', [challenge_name, points, flag, challenge_content], function() {
           res.status(201).send('Challenge added');

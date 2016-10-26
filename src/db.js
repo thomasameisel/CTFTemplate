@@ -4,7 +4,7 @@
 
 let sqlite3 = require('sqlite3');
 
-let db = new sqlite3.Database(__dirname + '/ctf.db');
+let db = new sqlite3.Database(__dirname + '/practice_ctf.db');
 
 function dbGet(req, res, query, params, cb) {
   db.get(query, params, function(err, data) {

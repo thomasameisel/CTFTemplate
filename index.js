@@ -9,12 +9,12 @@ let logger = require('morgan');
 let session = require('express-session');
 var SQLiteStore = require('connect-sqlite3')(session);
 
-let admin = require('./admin');
-let auth = require('./auth');
-let challenges = require('./challenges');
-let points = require('./points');
+let admin = require('./src/admin');
+let auth = require('./src/auth');
+let challenges = require('./src/challenges');
+let points = require('./src/points');
 
-require('./first_run').firstRun();
+require('./src/first_run').firstRun();
 
 let app = express();
 app.use(express.static('public'));

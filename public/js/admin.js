@@ -72,6 +72,7 @@ function updateChallenge(url, onSuccess) {
   ajaxPost(url, challenge,
     (data) => {
       changeAdminResponse(data);
+      populateAdminChallenges();
       if (onSuccess) onSuccess();
     },
     (data) => changeAdminResponse(JSON.parse(data.responseText).error));
@@ -81,7 +82,6 @@ function deleteChallenge() {
   updateChallenge('/v1/admin/delete_challenge', () => {
     $('#challenge_update').prop('disabled', true);
     $('#challenge_delete').prop('disabled', true);
-    populateAdminChallenges();
   });
 }
 
@@ -91,7 +91,6 @@ function editChallenge() {
 
 function addChallenge() {
   updateChallenge('/v1/admin/add_challenge', () => {
-    populateAdminChallenges();
     showAddChallenge();
   });
 }
