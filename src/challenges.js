@@ -114,7 +114,7 @@ function getCompleted(req, res) {
 }
 
 function getAllCompleted(req, res) {
-  db.dbAll(req, res, 'SELECT username, challenge_name, points, attempt_time FROM completed ORDER BY attempt_time DESC', [],
+  db.dbAll(req, res, 'SELECT username, challenge_name, attempt_time FROM completed ORDER BY attempt_time DESC', [],
     function(rows) {
       res.status(201).send(rows);
     });

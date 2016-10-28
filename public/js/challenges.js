@@ -34,6 +34,13 @@ function addChallengesToChallengesList(challenges) {
   }
 }
 
+function createError(res) {
+  let error = document.createElement('p');
+  let response = JSON.parse(res.responseText).error;
+  error.innerHTML = formatTimeResponse(response);
+  return error;
+}
+
 function populateChallenge(challengeId) {
   $('#loading').css('display', 'block');
   $('#challenge_content').hide();
@@ -41,11 +48,20 @@ function populateChallenge(challengeId) {
     (data) => {
       $('#loading').css('display', 'none');
       $('#challenge_content').show();
+      $('#response').show();
+      $('#flag').show();
+      $('#submit').show();
       addChallengeToContent(data);
     },
-    () => {
+    (data) => {
       $('#loading').css('display', 'none');
       $('#challenge_content').show();
+      $('#challenge').empty();
+      $('#response').hide();
+      $('#flag').hide();
+      $('#submit').hide();
+      let error = createError(data);
+      document.getElementById('challenge').appendChild(error);
     });
 }
 
@@ -53,10 +69,7 @@ function populateChallenges() {
   ajaxGet('/v1/challenges',
     addChallengesToChallengesList,
     (data) => {
-      let error = document.createElement('p');
-      let response = JSON.parse(data.responseText).error;
-      error.innerHTML = response.message + ' ';
-      error.innerHTML += moment(response.time*1000).format('hh:mm A');
+      let error = createError(data);
       document.getElementById('challenges').appendChild(error);
     });
 }
@@ -81,7 +94,7 @@ function submitFlag() {
         $('#submit_btn').prop('disabled', false);
         document.body.style.cursor='default';
 
-        changeResponse(JSON.parse(data.responseText).error);
+        changeResponse(formatTimeResponse(JSON.parse(data.responseText).error));
       });
   }
 }

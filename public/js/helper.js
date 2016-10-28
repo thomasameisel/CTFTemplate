@@ -59,3 +59,9 @@ function addChallengesToList(challenges, onclick) {
     onclick($(this).attr('id'));
   });
 }
+
+function formatTimeResponse(response) {
+  let message = response.message + ' ';
+  message += moment(response.time*1000).format('hh:mm A');
+  return message;
+}
