@@ -19,9 +19,19 @@ function checkTimes(req, res, start_time, end_time, now, cb) {
   if ((!start_time || time >= start_time) && (!end_time || time <= end_time)) {
     cb();
   } else if (start_time && time < start_time) {
-    res.status(401).send({ error: 'Competition starts at ' + moment.unix(start_time).format('hh:mm A') });
+    res.status(401).send({
+      error: {
+        message: 'Competition starts at',
+        time: start_time
+      }
+    });
   } else if (end_time && time > end_time) {
-    res.status(401).send({ error: 'Competition ended at ' + moment.unix(end_time).format('hh:mm A') });
+    res.status(401).send({
+      error: {
+        message: 'Competition ended at',
+        time: end_time
+      }
+    });
   } else {
     // should not happen
     res.status(401).send();

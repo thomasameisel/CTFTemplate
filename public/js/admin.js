@@ -97,18 +97,22 @@ function addChallenge() {
 
 function populateConf() {
   ajaxGet('/v1/admin/get_conf',
-    (data) => {
-      for (let type in data) {
-        $('#' + type).val(data[type]);
-      }
+    (rows) => {
+      rows.forEach((row) => {
+        let value = row.value;
+        if (Number.isInteger(value)) {
+          value = moment(value*1000).format('YYYY-MM-DDTHH:mm');
+        }
+        $('#' + row.type).val(value);
+      });
     },
     () => {});
 }
 
 function setTimes() {
   let times = {
-    start_time: $('#start_time').val(),
-    end_time: $('#end_time').val()
+    start_time: moment($('#start_time').val()).unix(),
+    end_time: moment($('#end_time').val()).unix()
   };
 
   ajaxPost('/v1/admin/set_times', times,

@@ -54,7 +54,9 @@ function populateChallenges() {
     addChallengesToChallengesList,
     (data) => {
       let error = document.createElement('p');
-      error.innerHTML = JSON.parse(data.responseText).error;
+      let response = JSON.parse(data.responseText).error;
+      error.innerHTML = response.message + ' ';
+      error.innerHTML += moment(response.time*1000).format('hh:mm A');
       document.getElementById('challenges').appendChild(error);
     });
 }

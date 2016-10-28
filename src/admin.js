@@ -10,15 +10,6 @@ let setValue = require('./challenges').setValue;
 
 let db = require('./db');
 
-function getAdmin(req, res) {
-  checkAdmin(req, res, () => {
-    fs.readFile('admin.html', function(err, data) {
-      if (err) res.status(401).send('Error occurred');
-      else res.status(201).send(data);
-    });
-  });
-}
-
 function getChallenges(req, res) {
   checkAdmin(req, res, () => {
     db.dbAll(req, res, 'SELECT rowid AS challenge_id, challenge_name, points FROM challenges ORDER BY points ASC', [],
@@ -92,17 +83,9 @@ function deleteChallenge(req, res) {
 
 function getConf(req, res) {
   checkAdmin(req, res, () => {
-    db.dbAll(req, res, 'SELECT * FROM conf', [], (data) => {
-      if (data.length === 0) res.status(401).send();
-      else {
-        let conf = {};
-        data.forEach((row) => {
-          if (row.type === 'start_time' || row.type === 'end_time') {
-            conf[row.type] = moment.unix(row.value).format('YYYY-MM-DDTHH:mm');
-          } else conf[row.type] = row.value;
-        });
-        res.status(201).send(conf);
-      }
+    db.dbAll(req, res, 'SELECT * FROM conf', [], (rows) => {
+      if (rows.length === 0) res.status(401).send();
+      else res.status(201).send(rows);
     });
   });
 }
@@ -114,8 +97,8 @@ function setTimes(req, res) {
     let times = { 'start_time': start_time, 'end_time': end_time };
     db.db.run('BEGIN TRANSACTION');
     for (let type in times) {
-      if (times[type] && times[type].length > 0) {
-        let unix = moment(times[type]).unix();
+      if (times[type]) {
+        let unix = times[type];
         db.dbRun(req, res, 'INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)',
           [type, unix], function() {
             setValue(type, unix);
@@ -150,7 +133,6 @@ function getAllAttempts(req, res) {
 }
 
 module.exports = {
-  getAdmin: getAdmin,
   getChallenges: getChallenges,
   getChallenge: getChallenge,
   addChallenge: addChallenge,
