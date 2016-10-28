@@ -103,7 +103,7 @@ function getCompleted(req, res) {
   let username = req.query.username;
   if (!username) res.status(400).send({ error: 'Must provide username' });
   else {
-    db.dbAll(req, res, 'SELECT challenge_name, points, attempt_time FROM completed WHERE username=? ORDER BY attempt_time DESC', [username],
+    db.dbAll(req, res, 'SELECT challenge_name, points, attempt_time FROM all_users_completed WHERE username=? ORDER BY attempt_time DESC', [username],
       function(rows) {
         res.status(201).send({
           username: username,

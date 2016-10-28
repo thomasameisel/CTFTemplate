@@ -51,6 +51,7 @@ function populateChallenge(challengeId) {
       $('#response').show();
       $('#flag').show();
       $('#submit').show();
+      $('#submit_btn').prop('disabled', false);
       addChallengeToContent(data);
     },
     (data) => {
@@ -83,7 +84,6 @@ function submitFlag() {
 
     ajaxPost('/v1/flag', inputs,
       (data) => {
-        $('#submit_btn').prop('disabled', false);
         document.body.style.cursor='default';
 
         changeResponse(data.msg);
@@ -94,7 +94,9 @@ function submitFlag() {
         $('#submit_btn').prop('disabled', false);
         document.body.style.cursor='default';
 
-        changeResponse(formatTimeResponse(JSON.parse(data.responseText).error));
+        let response = JSON.parse(data.responseText).error;
+        if (typeof response === 'string') changeResponse(response);
+        else if (typeof response === 'object') changeResponse(formatTimeResponse(response));
       });
   }
 }
