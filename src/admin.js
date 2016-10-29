@@ -2,6 +2,7 @@
 /*jslint esversion: 6 */
 'use strict';
 
+let async = require('async');
 let fs = require('fs');
 let moment = require('moment');
 
@@ -12,7 +13,7 @@ let db = require('./db');
 
 function getChallenges(req, res) {
   checkAdmin(req, res, () => {
-    db.dbAll(req, res, 'SELECT rowid AS challenge_id, challenge_name, points FROM challenges ORDER BY points ASC', [],
+    db.dbAll(req, res, 'SELECT ROWID AS challenge_id, challenge_name, points FROM challenges ORDER BY points ASC', [],
       function(data) {
         res.status(201).send(data);
       });
@@ -24,10 +25,18 @@ function getChallenge(req, res) {
     let challenge_id = req.query.challenge_id;
     if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
     else {
-      db.dbGet(req, res, 'SELECT rowid AS challenge_id, challenge_name, challenge_content, points, flag FROM challenges WHERE rowid=?',
+      db.dbAll(req, res, 'SELECT challenge_id, challenge_name, challenge_content, points, flag FROM challenges_flags WHERE challenge_id=?',
         [challenge_id],
-        function(data) {
-          res.status(201).send(data);
+        function(rows) {
+          let challenge = {
+            challenge_id: rows[0].challenge_id,
+            challenge_name: rows[0].challenge_name,
+            challenge_content: rows[0].challenge_content,
+            points: rows[0].points,
+            flags: []
+          };
+          rows.map((row) => challenge.flags.push(row.flag));
+          res.status(201).send(challenge);
         });
     }
   });
@@ -37,16 +46,26 @@ function addChallenge(req, res) {
   checkAdmin(req, res, () => {
     let challenge_name = req.body.challenge_name;
     let points = req.body.points;
-    let flag = req.body.flag;
+    let flags = req.body.flags;
     let challenge_content = req.body.challenge_content;
-    if (!challenge_name || !points || !flag || !challenge_content) {
+    if (!challenge_name || !points || !flags || flags.length === 0 || flags[0].length === 0 || !challenge_content) {
       res.status(401).send({ error: 'Must provide all information' });
     } else {
-      flag = flag.toLowerCase();
-      db.dbRun(req, res, 'INSERT INTO challenges (challenge_name,points,flag,challenge_content)' +
-        ' VALUES (?,?,?,?)', [challenge_name, points, flag, challenge_content], function() {
-          res.status(201).send('Challenge added');
-        });
+      flags = flags.map((flag) => flag.toLowerCase());
+      db.dbRun(req, res, 'INSERT INTO challenges (challenge_name,points,challenge_content)' +
+        ' VALUES (?,?,?)', [challenge_name, points, challenge_content], function(row) {
+        async.eachSeries(flags,
+          (flag, cb) => {
+            if (flag.length > 0) {
+              db.db.run('INSERT INTO flags (challenge_id,flag) VALUES (?,?)',
+                [row.lastID, flag.toLowerCase()], cb);
+            } else cb();
+          },
+          (err) => {
+            if (err) res.status(400).send({ error: 'Error occurred' });
+            else res.status(201).send('Challenge added');
+          });
+      });
     }
   });
 }
@@ -56,15 +75,27 @@ function editChallenge(req, res) {
     let challenge_id = req.body.challenge_id;
     let challenge_name = req.body.challenge_name;
     let points = req.body.points;
-    let flag = req.body.flag;
+    let flags = req.body.flags;
     let challenge_content = req.body.challenge_content;
-    if (!challenge_id || !challenge_name || !points || !flag || !challenge_content) {
+    if (!challenge_name || !points || !flags || flags.length === 0 || flags[0].length === 0 || !challenge_content) {
       res.status(401).send({ error: 'Must provide all information' });
     } else {
-      db.dbRun(req, res, 'UPDATE challenges SET challenge_name=?, points=?, flag=?, challenge_content=?' +
-        ' WHERE rowid=?', [challenge_name, points, flag, challenge_content, challenge_id], function() {
-          res.status(201).send('Challenge updated');
+      db.dbRun(req, res, 'UPDATE challenges SET challenge_name=?, points=?, challenge_content=?' +
+        ' WHERE ROWID=?', [challenge_name, points, challenge_content, challenge_id], function() {
+        db.dbRun(req, res, 'DELETE FROM flags WHERE challenge_id=?', [challenge_id], function() {
+          async.eachSeries(flags,
+            (flag, cb) => {
+              if (flag.length > 0) {
+                db.db.run('INSERT INTO flags (challenge_id,flag) VALUES (?,?)',
+                  [challenge_id, flag.toLowerCase()], cb);
+              } else cb();
+            },
+            (err) => {
+              if (err) res.status(400).send({ error: 'Error occurred' });
+              else res.status(201).send('Challenge updated');
+            });
         });
+      });
     }
   });
 }
@@ -74,7 +105,7 @@ function deleteChallenge(req, res) {
     let challenge_id = req.body.challenge_id;
     if (!challenge_id) res.status(401).send({ error: 'Must provide challenge_id' });
     else {
-      db.dbRun(req, res, 'DELETE FROM challenges WHERE rowid=?', [challenge_id], function() {
+      db.dbRun(req, res, 'DELETE FROM challenges WHERE ROWID=?', [challenge_id], function() {
         res.status(201).send('Challenge deleted');
       });
     }

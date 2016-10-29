@@ -23,9 +23,9 @@ function showAddChallenge() {
   $('#challenge_id').val('');
   $('#challenge_content').val('');
   $('#points').val('');
-  $('#flag').val('');
   $('#admin_response').text('');
   $('#challenge_delete').hide();
+  $('#flags').empty().append( $('#default_flag_div').clone().show().attr('id', 'flag_div') );
 
   $('#challenge_update').prop('disabled', false);
   $('#challenge_delete').prop('disabled', false);
@@ -42,7 +42,11 @@ function addAdminChallengeToContent(challenge) {
   $('#challenge_id').val(challenge.challenge_id);
   $('#challenge_content').val(challenge.challenge_content);
   $('#points').val(challenge.points);
-  $('#flag').val(challenge.flag);
+  $('#flags').empty().append( $('#default_flag_div').clone().show().attr('id', 'flag_div') );
+  $('#flag_div input').val(challenge.flags[0]);
+  for (let i = 1; i < challenge.flags.length; ++i) {
+    addFlag(challenge.flags[i]);
+  }
   $('#admin_response').text('');
   $('#challenge_delete').show();
 
@@ -51,6 +55,21 @@ function addAdminChallengeToContent(challenge) {
   $('#add_edit_challenge').text('Edit Challenge');
   $('#challenge_update').text('Update challenge');
   $('#challenge_update').attr('onclick', 'editChallenge()');
+}
+
+function deleteFlag(id) {
+  $('#' + id).remove();
+}
+
+function addFlag(flag) {
+  let newFlagDiv = $('#flags div:last-child').clone();
+  newFlagDiv.find('input').val('');
+  newFlagDiv.attr('num', parseInt(newFlagDiv.attr('num'))+1);
+  newFlagDiv.attr('id', 'flag_div_' + newFlagDiv.attr('num'));
+  if (flag) newFlagDiv.find('input').val(flag);
+  $('#flags').append(newFlagDiv);
+  $('#flags div:nth-last-child(2) span button').text('Delete Flag')
+    .attr('onclick', 'deleteFlag("' + $('#flags div:nth-last-child(2)').attr('id') + '")');
 }
 
 function populateAdminChallenge(challenge_id) {
@@ -68,6 +87,9 @@ function populateAdminChallenges() {
 function updateChallenge(url, onSuccess) {
   let challenge = inputToJSON();
   challenge.challenge_content = $('#challenge_content').val();
+  challenge.flags = $('#flags input').map(function() {
+    return $(this).val();
+  }).get();
 
   ajaxPost(url, challenge,
     (data) => {
@@ -90,9 +112,7 @@ function editChallenge() {
 }
 
 function addChallenge() {
-  updateChallenge('/v1/admin/add_challenge', () => {
-    showAddChallenge();
-  });
+  updateChallenge('/v1/admin/add_challenge', showAddChallenge);
 }
 
 function populateConf() {

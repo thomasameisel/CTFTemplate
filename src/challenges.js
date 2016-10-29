@@ -35,6 +35,21 @@ function formatStr(str, insertStr) {
   return str.replace('%s', insertStr);
 }
 
+function flagMatches(userFlag, dbFlags) {
+  let lowerFlag = userFlag.toLowerCase();
+  if (dbFlags) {
+    for (let i = 0; i < dbFlags.length; ++i) {
+      let actualFlag = dbFlags[i].flag.toLowerCase();
+      let correct = (actualFlag === lowerFlag) ||
+        (flag_format !== undefined &&
+          (formatStr(flag_format, actualFlag) === lowerFlag ||
+          formatStr(flag_format, lowerFlag) === actualFlag));
+      if (correct) return true;
+    }
+  }
+  return false;
+}
+
 function getChallenges(req, res) {
   // only return the challenges the user has not completed yet
   checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
@@ -77,17 +92,12 @@ function submitFlag(req, res) {
                 res.status(401).send({ error: 'Already completed this challenge' });
               });
           } else {
-            db.dbGet(req, res, 'SELECT flag FROM challenges WHERE rowid=?', [challenge_id], function(data) {
+            db.dbAll(req, res, 'SELECT flag FROM challenges_flags WHERE challenge_id=?', [challenge_id], function(rows) {
               let lowerFlag = flag.toLowerCase();
-              let actualFlag = data.flag.toLowerCase();
-              let correct = data && actualFlag &&
-                (actualFlag === lowerFlag ||
-                  (flag_format !== undefined &&
-                    (formatStr(flag_format, actualFlag) === lowerFlag ||
-                    formatStr(flag_format, lowerFlag) === actualFlag)));
+              let correct = flagMatches(lowerFlag, rows);
               db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
                 'VALUES (?,?,?,?,?)', [req.session.username, challenge_id, unixTime, flag, correct], function() {
-                  if (!data || !actualFlag) res.status(401).send({ error: 'challenge_id is not valid' });
+                  if (!rows) res.status(401).send({ error: 'challenge_id is not valid' });
                   // check if the given flag or flag in database is formatted
                   else if (correct) res.status(201).send({ msg: 'Correct answer!' });
                   else res.status(401).send({ error: 'flag is not correct' });

@@ -29,7 +29,7 @@ function dbRun(req, res, query, params, cb) {
     if (err) {
       console.log(err);
       res.status(400).send({ error: 'Error occured' });
-    } else if (cb) cb();
+    } else if (cb) cb(this);
   });
 }
 

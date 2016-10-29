@@ -39,7 +39,20 @@
             <input type="number" class="form-control" id="points" placeholder="Points">
         </div>
         <div class="form-group">
-            <input type="text" class="form-control" id="flag" placeholder="Flag">
+            <div id="default_flag_div" num="1" class="input-group" style="display:none">
+                <input type="text" class="form-control" placeholder="Flag">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" onclick="addFlag()" style="height:44px">Add Flag</button>
+                </span>
+            </div>
+            <div id="flags">
+                <div id="flag_div" num="1" class="input-group">
+                    <input type="text" class="form-control" placeholder="Flag">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" onclick="addFlag()" style="height:44px">Add Flag</button>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="form-group">
