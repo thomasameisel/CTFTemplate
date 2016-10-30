@@ -77,7 +77,7 @@ function editChallenge(req, res) {
     let points = req.body.points;
     let flags = req.body.flags;
     let challenge_content = req.body.challenge_content;
-    if (!challenge_name || !points || !flags || flags.length === 0 || flags[0].length === 0 || !challenge_content) {
+    if (!challenge_id || !challenge_name || !points || !flags || flags.length === 0 || flags[0].length === 0 || !challenge_content) {
       res.status(401).send({ error: 'Must provide all information' });
     } else {
       db.dbRun(req, res, 'UPDATE challenges SET challenge_name=?, points=?, challenge_content=?' +
@@ -106,7 +106,9 @@ function deleteChallenge(req, res) {
     if (!challenge_id) res.status(401).send({ error: 'Must provide challenge_id' });
     else {
       db.dbRun(req, res, 'DELETE FROM challenges WHERE ROWID=?', [challenge_id], function() {
-        res.status(201).send('Challenge deleted');
+        db.dbRun(req, res, 'DELETE FROM flags WHERE challenge_id=?', [challenge_id], function() {
+          res.status(201).send('Challenge deleted');
+        });
       });
     }
   });
@@ -131,13 +133,11 @@ function setTimes(req, res) {
       if (times[type]) {
         let unix = times[type];
         db.dbRun(req, res, 'INSERT OR REPLACE INTO conf (type, value) VALUES (?,?)',
-          [type, unix], function() {
-            setValue(type, unix);
-            res.status(201).send();
-          });
+          [type, unix], () => setValue(type, unix));
       }
     }
     db.db.run('END');
+    res.status(201).send();
   });
 }
 

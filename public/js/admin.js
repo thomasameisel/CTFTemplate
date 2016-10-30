@@ -88,7 +88,9 @@ function updateChallenge(url, onSuccess) {
   let challenge = inputToJSON();
   challenge.challenge_content = $('#challenge_content').val();
   challenge.flags = $('#flags input').map(function() {
-    return $(this).val();
+    if ($(this).val() && $(this).val().length > 0) {
+      return $(this).val();
+    }
   }).get();
 
   ajaxPost(url, challenge,
