@@ -44,7 +44,7 @@ function createError(res) {
 function populateChallenge(challengeId) {
   $('#loading').css('display', 'block');
   $('#challenge_content').hide();
-  ajaxGet('/v1/challenge?challenge_id=' + challengeId,
+  ajaxGet('/v1/game/challenge?challenge_id=' + challengeId,
     (data) => {
       $('#loading').css('display', 'none');
       $('#challenge_content').show();
@@ -67,7 +67,7 @@ function populateChallenge(challengeId) {
 }
 
 function populateChallenges() {
-  ajaxGet('/v1/challenges',
+  ajaxGet('/v1/game/challenges',
     addChallengesToChallengesList,
     (data) => {
       let error = createError(data);
@@ -82,7 +82,7 @@ function submitFlag() {
     $('#submit_btn').prop('disabled', true);
     document.body.style.cursor='wait';
 
-    ajaxPost('/v1/flag', inputs,
+    ajaxPost('/v1/game/flag', inputs,
       (data) => {
         document.body.style.cursor='default';
 

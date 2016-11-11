@@ -31,12 +31,6 @@ app.use(session({
   saveUninitialized: false
 }));
 
-app.get('/v1/challenges', challenges.getChallenges);
-
-app.get('/v1/challenge', challenges.getChallenge);
-
-app.post('/v1/flag', challenges.submitFlag);
-
 app.get('/v1/completed', challenges.getCompleted);
 
 app.get('/v1/all_completed', challenges.getAllCompleted);
@@ -54,6 +48,20 @@ app.get('/v1/leaderboard', points.getLeaderboard);
 app.get('/v1/points', points.getPoints);
 
 app.get('/v1/leaderboard_all_completed', points.getLeaderboardAllCompleted);
+
+// routes that require login
+
+app.get('/v1/game/*', challenges.checkAuthorizedTimes);
+
+app.get('/v1/game/challenges', challenges.getChallenges);
+
+app.get('/v1/game/challenge', challenges.getChallenge);
+
+app.post('/v1/game/flag', challenges.submitFlag);
+
+// routes that require admin
+
+app.get('/v1/admin/*', auth.checkAdmin);
 
 app.get('/v1/admin/challenges', admin.getChallenges);
 

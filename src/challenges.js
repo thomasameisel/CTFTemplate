@@ -52,61 +52,55 @@ function flagMatches(userFlag, dbFlags) {
 
 function getChallenges(req, res) {
   // only return the challenges the user has not completed yet
-  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
-    db.dbAll(req, res, 'SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
-      [req.session.username],
-      function(data) {
-        res.status(201).send(data);
-      });
-  });
+  db.dbAll(req, res, 'SELECT challenge_id, challenge_name, points FROM not_completed WHERE username=? ORDER BY points ASC',
+    [req.session.username],
+    function(data) {
+      res.status(201).send(data);
+    });
 }
 
 function getChallenge(req, res) {
-  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
-    let challenge_id = req.query.challenge_id;
-    if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
-    else {
-      db.dbGet(req, res, 'SELECT rowid AS challenge_id, challenge_content FROM challenges WHERE rowid=?', [challenge_id],
-        function(data) {
-          res.status(201).send(data);
-        });
-    }
-  });
+  let challenge_id = req.query.challenge_id;
+  if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
+  else {
+    db.dbGet(req, res, 'SELECT rowid AS challenge_id, challenge_content FROM challenges WHERE rowid=?', [challenge_id],
+      function(data) {
+        res.status(201).send(data);
+      });
+  }
 }
 
 function submitFlag(req, res) {
-  checkAuthorized(req, res, start_time, end_time, Date.now(), () => {
-    let challenge_id = req.body.challenge_id;
-    let flag = req.body.flag;
-    if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
-    else if (!flag) res.status(400).send({ error: 'Must provide flag' });
-    else {
-      db.dbGet(req, res, 'SELECT * FROM attempts WHERE correct=1 AND username=? AND challenge_id=?',
-        [req.session.username, challenge_id],
-        function(data) {
-          let unixTime = Math.floor(new Date() / 1000);
+  let challenge_id = req.body.challenge_id;
+  let flag = req.body.flag;
+  if (!challenge_id) res.status(400).send({ error: 'Must provide challenge_id' });
+  else if (!flag) res.status(400).send({ error: 'Must provide flag' });
+  else {
+    db.dbGet(req, res, 'SELECT * FROM attempts WHERE correct=1 AND username=? AND challenge_id=?',
+      [req.session.username, challenge_id],
+      function(data) {
+        let unixTime = Math.floor(new Date() / 1000);
 
-          if (data) {
-            db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt) ' +
-              'VALUES (?,?,?,?)', [req.session.username, challenge_id, unixTime, flag], function() {
-                res.status(401).send({ error: 'Already completed this challenge' });
-              });
-          } else {
-            db.dbAll(req, res, 'SELECT flag FROM challenges_flags WHERE challenge_id=?', [challenge_id], function(rows) {
-              let lowerFlag = flag.toLowerCase();
-              let correct = flagMatches(lowerFlag, rows);
-              db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
-                'VALUES (?,?,?,?,?)', [req.session.username, challenge_id, unixTime, flag, correct], function() {
-                  if (!rows) res.status(401).send({ error: 'challenge_id is not valid' });
-                  // check if the given flag or flag in database is formatted
-                  else if (correct) res.status(201).send({ msg: 'Correct answer!' });
-                  else res.status(401).send({ error: 'flag is not correct' });
-              });
+        if (data) {
+          db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt) ' +
+            'VALUES (?,?,?,?)', [req.session.username, challenge_id, unixTime, flag], function() {
+              res.status(401).send({ error: 'Already completed this challenge' });
             });
-          }
-        });
-    }
-  });
+        } else {
+          db.dbAll(req, res, 'SELECT flag FROM challenges_flags WHERE challenge_id=?', [challenge_id], function(rows) {
+            let lowerFlag = flag.toLowerCase();
+            let correct = flagMatches(lowerFlag, rows);
+            db.dbRun(req, res, 'INSERT INTO attempts (username,challenge_id,attempt_time,attempt,correct) ' +
+              'VALUES (?,?,?,?,?)', [req.session.username, challenge_id, unixTime, flag, correct], function() {
+                if (!rows) res.status(401).send({ error: 'challenge_id is not valid' });
+                // check if the given flag or flag in database is formatted
+                else if (correct) res.status(201).send({ msg: 'Correct answer!' });
+                else res.status(401).send({ error: 'flag is not correct' });
+            });
+          });
+        }
+      });
+  }
 }
 
 function getCompleted(req, res) {
@@ -130,11 +124,16 @@ function getAllCompleted(req, res) {
     });
 }
 
+function checkAuthorizedTimes(req, res, cb) {
+  checkAuthorized(req, res, start_time, end_time, Date.now(), cb);
+}
+
 module.exports = {
   getChallenges: getChallenges,
   getChallenge: getChallenge,
   submitFlag: submitFlag,
   getCompleted: getCompleted,
   getAllCompleted: getAllCompleted,
-  setValue: setValue
+  setValue: setValue,
+  checkAuthorizedTimes: checkAuthorizedTimes
 };

@@ -61,7 +61,10 @@ function addChallengesToList(challenges, onclick) {
 }
 
 function formatTimeResponse(response) {
-  let message = response.message + ' ';
-  message += moment(response.time*1000).format('hh:mm A');
-  return message;
+  if (!response.message) return response;
+  else {
+    let message = response.message;
+    if (response.time) message += ' ' + moment(response.time*1000).format('hh:mm A');
+    return message;
+  }
 }
